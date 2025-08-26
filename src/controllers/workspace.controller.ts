@@ -3,7 +3,7 @@ import e, {Request,Response ,NextFunction } from "express";
 import { HTTPSTATUS } from "../config/httpConfig";
 import { asyncHandler } from "../middlewares/asynchandler.middleware";
 import { changeRoleSchema, createworkspaceSchema, updateWorkspaceSchema, workspaceIdSchema } from "../validation/workspace.validation";
-import { changeMemberRoleService, createWorkspaceService, getWorkspaceAnalyticsService, getWorkspaceByIdService, getWorkspaceMember, getWorkspaceUserIsMemberService } from "../services/workspace.service";
+import { changeMemberRoleService, createWorkspaceService, deleteWorkspaceService, getWorkspaceAnalyticsService, getWorkspaceByIdService, getWorkspaceMember, getWorkspaceUserIsMemberService, updateWorkspaceService } from "../services/workspace.service";
 import { getMemberRoleService } from "../services/member.service";
 import { PermissionsEnum } from "../enums/role.enum";
 import { rowGuard } from "../util/roleGuard";
@@ -36,6 +36,23 @@ export const updateWorkspaceController = asyncHandler(async(req: Request, res: R
     })
 }
 )
+
+export const deleteWorkspaceController = asyncHandler(async(req: Request, res: Response, next: NextFunction) => {
+    const workspaceId= workspaceIdSchema.parse(req.params.id);
+    const userId = req.user?._id;
+
+    const {roleName} = await getMemberRoleService(userId, workspaceId);
+    rowGuard(roleName,[PermissionsEnum.DELETE_WORKSPACE]);
+
+    // Implementation for deleting workspace goes here
+    const {currentWorkspace } = await deleteWorkspaceService(userId,workspaceId);
+
+     res.status(HTTPSTATUS.OK).json({
+        message: "Workspace deleted successfully",
+        // Include any relevant data here
+    })
+
+})
 
 export const getWorkspaceUserIsMemberController = asyncHandler(async (req: Request, res: Response, next: NextFunction)=>{
      const userId = req.user?._id;

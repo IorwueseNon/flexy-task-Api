@@ -7,6 +7,8 @@ import { NotFoundException } from "../util/appError";
 import RoleModel from "../models/role_permission.model";
 import TaskModel from "../models/task.model";
 import { TaskStatusEnum } from "../enums/task.enum";
+import { session } from "passport";
+import ProjectModel from "../models/project.model";
 
 export const createWorkspaceService = async (userId: string, body:{name:string,description?:string | undefined}) => {
     const { name, description } = body;
@@ -38,6 +40,52 @@ export const createWorkspaceService = async (userId: string, body:{name:string,d
 
 
 
+
+}
+
+export const updateWorkspaceService = async (workspaceId:string,name:string | undefined,description?:string) => {
+    const workspace = await WorkspaceModel.findById(workspaceId);
+    if (!workspace) {
+        throw new NotFoundException("Workspace not found");
+    }
+    workspace.name = name || workspace.name;
+    workspace.description = description || workspace.description;
+    await workspace.save();
+    return {workspace}
+}
+
+export const deleteWorkspaceService = async (userId:string, workspaceId:string) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {   
+    const workspace = await WorkspaceModel.findById(workspaceId).session(session);
+    if (!workspace) {
+         throw new NotFoundException("Workspace not found");
+    }
+    if (workspace.owner.toString() !== userId) {
+        throw new NotFoundException("Only the owner can delete the workspace"); 
+    }
+     const user = await UserModel.findById(userId).session(session);
+        if (!user) {
+            throw new NotFoundException("User not found");
+        }
+        await ProjectModel.deleteMany({workspace:workspaceId}).session(session);
+        await TaskModel.deleteMany({workspace:workspaceId}).session(session);
+        await MemberModel.deleteMany({workspaceId:workspaceId}).session(session);
+        if(user.currentWorkspace?.equals(workspaceId) ){
+            const member = await MemberModel.findOne({userId}).session(session);
+            user.currentWorkspace = member ? member.workspaceId : null;
+        }
+        user.save({session})
+        workspace.deleteOne({session});
+        await session.commitTransaction();
+        session.endSession();
+        return {currentWorkspace: user.currentWorkspace};
+    }catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+    }
 
 }
 
