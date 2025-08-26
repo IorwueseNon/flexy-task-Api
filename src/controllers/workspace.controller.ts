@@ -49,7 +49,7 @@ export const deleteWorkspaceController = asyncHandler(async(req: Request, res: R
 
      res.status(HTTPSTATUS.OK).json({
         message: "Workspace deleted successfully",
-        // Include any relevant data here
+        currentWorkspace: currentWorkspace
     })
 
 })

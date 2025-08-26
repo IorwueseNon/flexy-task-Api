@@ -79,13 +79,13 @@ export const deleteWorkspaceService = async (userId:string, workspaceId:string) 
         user.save({session})
         workspace.deleteOne({session});
         await session.commitTransaction();
-        session.endSession();
         return {currentWorkspace: user.currentWorkspace};
     }catch (error) {
         await session.abortTransaction();
-        session.endSession();
         throw error;
-    }
+    }finally {
+        session.endSession();
+    }   
 
 }
 
