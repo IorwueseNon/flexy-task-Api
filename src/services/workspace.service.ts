@@ -132,7 +132,7 @@ export const getWorkspaceAnalyticsService = async (workspaceId:string)=>{
         status:{$ne:TaskStatusEnum.DONE}
     })
     const completedTask = await TaskModel.countDocuments({workspace:workspaceId,
-        status:{$ne:TaskStatusEnum.DONE}
+        status:{$et:TaskStatusEnum.DONE}
     })
     const analytics = {
         totalTask,

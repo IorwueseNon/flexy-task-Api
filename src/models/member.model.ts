@@ -20,7 +20,7 @@ const memberSchema = new mongoose.Schema<MemberDocument>({
     joinedAt: { type: Date, default: Date.now }
 }, {
     timestamps: true
-}); 
+});  
 
 const MemberModel = mongoose.model<MemberDocument>('Member', memberSchema);
 export default MemberModel;

@@ -77,9 +77,11 @@ export const getProjectAnalysisService = async (projectId: string, workspaceId: 
         throw new NotFoundException("Project not found or does not belong to the workspace")
     }
 
+    const task = await TaskModel.find({ project: projectId })
+    console.log("task", task)
     const taskAnalytics = await TaskModel.aggregate([
         {
-            $match: { projectId: new mongoose.Types.ObjectId(project._id) },
+            $match: { project: new mongoose.Types.ObjectId(project._id) },
         }, {
             $facet: {
                 totalTasks: [{ $count: "count" }],
